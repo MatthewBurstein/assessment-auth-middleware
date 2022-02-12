@@ -1,17 +1,11 @@
-import {
-  Jwt,
-  JwtPayload,
-  verify,
-  Algorithm,
-  JsonWebTokenError,
-} from "jsonwebtoken";
+import { Algorithm, JsonWebTokenError, JwtPayload, verify } from "jsonwebtoken";
 import * as express from "express";
 import axios, { AxiosResponse } from "axios";
 import jwkToPem from "jwk-to-pem";
 
 declare module "express" {
   interface Request {
-    user?: Jwt;
+    user?: JwtPayload;
   }
 }
 
@@ -38,7 +32,8 @@ const authorize =
       const authorization = authorizationHeader.substring("Bearer ".length);
       const publicKey = await getPublicKey();
       try {
-        verifyJwt(authorization, publicKey, options);
+        req.user = verifyJwt(authorization, publicKey, options);
+        return next();
       } catch (err) {
         if (err instanceof JsonWebTokenError) {
           return res.send(401);
@@ -49,8 +44,6 @@ const authorize =
     } else {
       return res.send(401);
     }
-
-    return Promise.reject("Not implemented");
   };
 
 const getPublicKey = async (): Promise<JwtPayload> => {

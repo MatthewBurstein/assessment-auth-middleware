@@ -17,3 +17,9 @@ We intend to use the `verify` function of the `jsonwebtoken` NPM package to do m
 HINT: you might be best using the alternative `decode` function provided by `jsonwebtoken` to get started (https://www.npmjs.com/package/jsonwebtoken#jwtdecodetoken--options).
 
 A failing "happy path" test has already been set up for you, including a mock response for the request to retrieve the public key used to verify the token signature.
+
+## Notes
+
+* malformed public key response
+* There is a disconnect between the type of the `Request` interface in `index.ts` and the expected `user` field in the tests.
+  The type seems to want the overload of verify with `complete: true`. I assumed the tests were correct and amended the type.

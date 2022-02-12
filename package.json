@@ -10,6 +10,7 @@
     "test:cov": "jest --coverage"
   },
   "dependencies": {
+    "axios": "^0.25.0",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^2.0.4"
   },

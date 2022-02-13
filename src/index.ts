@@ -1,16 +1,13 @@
 import { Algorithm, JsonWebTokenError, JwtPayload, verify } from "jsonwebtoken";
 import * as express from "express";
-import axios, { AxiosResponse } from "axios";
 import jwkToPem from "jwk-to-pem";
+import { getPublicKey } from "./getPublicKey";
+import { isString } from "./typeguards";
 
 declare module "express" {
   interface Request {
     user?: JwtPayload;
   }
-}
-
-interface PublicKeyResponse {
-  keys: [Record<string, unknown>];
 }
 
 export interface Options {
@@ -48,15 +45,6 @@ const authorize =
 const extractAuthToken = (req: express.Request): string | undefined =>
   req.headers?.authorization?.substring("Bearer ".length);
 
-const getPublicKey = async (): Promise<JwtPayload> => {
-  const publicKeyResponse: AxiosResponse<PublicKeyResponse> =
-    await axios.get<PublicKeyResponse>(
-      "http://issuer.com/.well-known/jwks.json"
-    );
-  // TODO what happens if there are multiple keys or no key?;
-  return publicKeyResponse.data.keys[0];
-};
-
 const verifyJwt = (
   authorization: string,
   publicKey: JwtPayload,
@@ -72,7 +60,5 @@ const verifyJwt = (
   }
   return result;
 };
-
-const isString = (value: any): value is string => typeof value === "string";
 
 export default authorize;

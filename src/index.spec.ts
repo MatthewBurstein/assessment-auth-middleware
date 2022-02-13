@@ -38,8 +38,8 @@ describe("A request with a valid access token", () => {
     });
 
     await authorise(options)(req, res, next);
-    expect(req).toHaveProperty("user", claims);
 
+    expect(req).toHaveProperty("user", claims);
     expect(next).toHaveBeenCalledTimes(1);
   });
 });
@@ -72,6 +72,34 @@ describe("A request without a valid access token", () => {
     await authorise(options)(req, res, next);
 
     expect(res.send).toHaveBeenCalledWith(401);
+    expect(next).not.toHaveBeenCalled();
+  });
+});
+
+describe("For an invalid publicKey reponse", () => {
+  beforeEach(async () => {
+    nock.restore();
+
+    nock(options.issuer)
+      .persist()
+      .get("/.well-known/jwks.json")
+      .reply(200, { keys: [{ property: "notAValidPublicKey" }] });
+  });
+
+  test("should throw an error and not call next or res.send", async () => {
+    const res = createResponse();
+    res.send = jest.fn();
+    const next = jest.fn();
+    const token = await tokenGenerator.createSignedJWT(claims);
+    const req = createRequest({
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    await expect(authorise(options)(req, res, next)).rejects.toThrow();
+
+    expect(res.send).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
   });
 });

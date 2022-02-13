@@ -26,13 +26,12 @@ const authorize =
     res: express.Response,
     next: express.NextFunction
   ): Promise<void | express.Response> => {
-    const authorizationHeader = req.headers.authorization;
+    const authToken = extractAuthToken(req);
 
-    if (authorizationHeader) {
-      const authorization = authorizationHeader.substring("Bearer ".length);
-      const publicKey = await getPublicKey();
+    if (authToken) {
       try {
-        req.user = verifyJwt(authorization, publicKey, options);
+        const publicKey = await getPublicKey();
+        req.user = verifyJwt(authToken, publicKey, options);
         return next();
       } catch (err) {
         if (err instanceof JsonWebTokenError) {
@@ -45,6 +44,9 @@ const authorize =
       return res.send(401);
     }
   };
+
+const extractAuthToken = (req: express.Request): string | undefined =>
+  req.headers?.authorization?.substring("Bearer ".length);
 
 const getPublicKey = async (): Promise<JwtPayload> => {
   const publicKeyResponse: AxiosResponse<PublicKeyResponse> =
@@ -61,12 +63,16 @@ const verifyJwt = (
   options: Options
 ): JwtPayload => {
   const result = verify(authorization, jwkToPem(publicKey), {
-    algorithms: [options.algorithms as Algorithm],
+    algorithms: [options.algorithms as Algorithm], // this cast is safe because a string which is not an Algorithm will just fail the verification
     audience: options.audience,
     issuer: options.issuer,
   });
-  // TODO what happens if result is string
-  return result as JwtPayload;
+  if (isString(result)) {
+    throw new JsonWebTokenError("jwt malformed");
+  }
+  return result;
 };
+
+const isString = (value: any): value is string => typeof value === "string";
 
 export default authorize;

@@ -20,9 +20,8 @@ A failing "happy path" test has already been set up for you, including a mock re
 
 ## Notes
 
-* malformed public key response
 * There is a disconnect between the type of the `Request` interface in `index.ts` and the expected `user` field in the tests.
   The type seems to want the overload of verify with `complete: true`. I assumed the tests were correct and amended the type.
 * The `algorithms` property on the `Options` interface is a string, but the algorithms in `verify` is a string array.
-  I have handled the algorithms property as though it were a single algorithm in a string, but if it is actually eg a comma separated list
-  then I would split it into an array to pass to the verify options.
+  I have handled the algorithms property as though it were a single algorithm as a string, but since the word is plural I wonder if
+  it is actually eg a comma separated list in which case I would split it into a `string[]` to pass to the verify options.

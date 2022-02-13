@@ -23,22 +23,23 @@ const authorize =
     res: express.Response,
     next: express.NextFunction
   ): Promise<void | express.Response> => {
-    const authToken = extractAuthToken(req);
+    const authToken: string | undefined = extractAuthToken(req);
 
-    if (authToken) {
-      try {
-        const publicKey = await getPublicKey();
-        req.user = verifyJwt(authToken, publicKey, options);
-        return next();
-      } catch (err) {
-        if (err instanceof JsonWebTokenError) {
-          return res.send(401);
-        } else {
-          throw err;
-        }
-      }
-    } else {
+    if (!authToken) {
       return res.send(401);
+    }
+
+    const publicKey = await getPublicKey();
+
+    try {
+      req.user = verifyJwt(authToken, publicKey, options);
+      return next();
+    } catch (err) {
+      if (err instanceof JsonWebTokenError) {
+        return res.send(401);
+      } else {
+        throw err;
+      }
     }
   };
 
@@ -47,17 +48,24 @@ const extractAuthToken = (req: express.Request): string | undefined =>
 
 const verifyJwt = (
   authorization: string,
-  publicKey: JwtPayload,
+  publicKey: Record<string, unknown>,
   options: Options
 ): JwtPayload => {
-  const result = verify(authorization, jwkToPem(publicKey), {
-    algorithms: [options.algorithms as Algorithm], // this cast is safe because a string which is not an Algorithm will just fail the verification
-    audience: options.audience,
-    issuer: options.issuer,
-  });
+  const result: JwtPayload | string = verify(
+    authorization,
+    jwkToPem(publicKey),
+    {
+      // this cast is safe because a string which is not an Algorithm will just fail the verification
+      algorithms: [options.algorithms as Algorithm],
+      audience: options.audience,
+      issuer: options.issuer,
+    }
+  );
+
   if (isString(result)) {
     throw new JsonWebTokenError("jwt malformed");
   }
+
   return result;
 };
 

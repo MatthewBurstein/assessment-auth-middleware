@@ -23,8 +23,8 @@ A failing "happy path" test has already been set up for you, including a mock re
 * There is a disconnect between the type of the `Request` interface in `index.ts` and the expected `user` field in the tests.
   The type seems to want the overload of verify with `complete: true`. I assumed the tests were correct and amended the type.
 * The `algorithms` property on the `Options` interface is a string, but the algorithms in `verify` is a string array.
-  I have handled the algorithms property as though it were a single algorithm as a string, but since the word is plural I wonder if
-  it is actually eg a comma separated list in which case I would split it into a `string[]` to pass to the verify options.
-* Ideally I would narrow the response from getPublicKey to an appropriate type and fail explicitly if unable to do so. 
+  I have handled the `algorithms` property as though it were a single algorithm as a string, but since the word is plural I wonder if
+  it is actually eg a comma separated list, in which case I would split it into a string array to pass to the verify options.
+* Ideally I would narrow the response from `getPublicKey` to an appropriate type and fail explicitly if unable to do so. 
   However this would involve some extra machinery as the type required by `jwkToPem` changes depending on the algorithm used, but the algorithm is passed in at runtime.  
   Instead I use the fact that `jwkToPem` throws on an invalid jwk to fail the function in this case. 

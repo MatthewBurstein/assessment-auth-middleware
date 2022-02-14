@@ -74,6 +74,26 @@ describe("A request without a valid access token", () => {
     expect(res.send).toHaveBeenCalledWith(401);
     expect(next).not.toHaveBeenCalled();
   });
+
+  test("should return a 401 response and not call next if token has expired", async () => {
+    const res = createResponse();
+    res.send = jest.fn();
+    const next = jest.fn();
+    const token = await tokenGenerator.createSignedJWT({
+      ...claims,
+      exp: currentTime,
+    });
+    const req = createRequest({
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    await authorise(options)(req, res, next);
+
+    expect(res.send).toHaveBeenCalledWith(401);
+    expect(next).not.toHaveBeenCalled();
+  });
 });
 
 describe("For an invalid publicKey reponse", () => {

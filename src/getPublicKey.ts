@@ -1,4 +1,3 @@
-import { JwtPayload } from "jsonwebtoken";
 import axios from "axios";
 
 const PUBLIC_KEY_URL = "http://issuer.com/.well-known/jwks.json";

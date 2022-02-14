@@ -59,13 +59,37 @@ describe("A request without a valid access token", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  test("should return a 401 response and not call next if token is not valid", async () => {
+  test("should return a 401 response and not call next if issuer is not valid", async () => {
     const res = createResponse();
     res.send = jest.fn();
     const next = jest.fn();
+    const token = await tokenGenerator.createSignedJWT({
+      ...claims,
+      iss: "invalidIssuer"
+    });
     const req = createRequest({
       headers: {
-        Authorization: `Bearer invalidToken`,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    await authorise(options)(req, res, next);
+
+    expect(res.send).toHaveBeenCalledWith(401);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test("should return a 401 response and not call next if audience is not valid", async () => {
+    const res = createResponse();
+    res.send = jest.fn();
+    const next = jest.fn();
+    const token = await tokenGenerator.createSignedJWT({
+      ...claims,
+      aud: "invalidAudience"
+    });
+    const req = createRequest({
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -81,7 +105,7 @@ describe("A request without a valid access token", () => {
     const next = jest.fn();
     const token = await tokenGenerator.createSignedJWT({
       ...claims,
-      exp: currentTime,
+      exp: currentTime - 1,
     });
     const req = createRequest({
       headers: {
@@ -96,7 +120,7 @@ describe("A request without a valid access token", () => {
   });
 });
 
-describe("For an invalid publicKey reponse", () => {
+describe("For an invalid publicKey response", () => {
   beforeEach(async () => {
     nock.restore();
 
